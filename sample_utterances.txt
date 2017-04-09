@@ -1,0 +1,8 @@
+PathTrain {station}
+PathTrain {station} station
+PathTrain {station} train station
+PathTrain Next train to {station}
+PathTrain Next train {station}
+PathTrain When is the next train to {station}
+PathTrain What time is the next train to {station}
+PathTrain What time is the next train to {station} station

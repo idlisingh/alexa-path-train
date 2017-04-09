@@ -1,0 +1,13 @@
+{
+  "intents": [
+    {
+      "intent": "PathTrain",
+      "slots": [
+        {
+          "name": "station",
+          "type": "STATIONS"
+        }
+      ]
+    }
+  ]
+}
