@@ -2,51 +2,27 @@ exports.handler = (event, context, callback) => {
     if (event.session.new) {
         console.log("New Session")
     }
-    console.log(event.request.type)
-    
+
     switch(event.request.type) {
         case "LaunchRequest": 
             console.log("Launch requested")
             context.succeed (
                 generateResponse(
-                    {},
-                    buildSpeechResponse("Which PATH station do you want to go to?", true)
+                    "Which PATH station do you want to go to?", true, {}
                 )
             )
             break;
         case "IntentRequest": 
             switch(event.request.intent.name) {
                 case "PathTrain": 
-                    var clientDate = new Date(event.request.timestamp)
-                    var offset = -4.0
-                    var utc = clientDate.getTime() + (clientDate.getTimezoneOffset() * 60000);
-                    var date = new Date(utc + (3600000 * offset));
-                    var callHour = date.getHours();
-                    var callMin = date.getMinutes();
-                    
-                    var schedule = getWeekdaySchedules();
-                    var trainTime = [];
-                    console.log("Finding for " + date + " with " + schedule.length);
-                    for (var i = 0; trainTime.length < 2 && i < schedule.length; i++) {
-                    	var value = schedule[i];
-                    	var hour = parseInt(value.split(":")[0]);
-                    	var min = parseInt(value.split(":")[1]);
-                    	if (callHour <= hour) {
-                    		if (callHour < hour || callMin <= min) {
-                    			var diff = min - callMin;
-                    			diff = diff < 0? diff + 60: diff;
-                    			trainTime.push(diff)
-                    		}
-                    	}
-                    }
-                    console.log("Next train at: " + trainTime.join(" and "));
-
+                    var date = getDate(event)
+                    var trainTime = getTrainTime(date)
                     var station = event.request.intent.slots.station.value
-                    console.log(station)
+                    console.log("Next train to " + station + " is in " + trainTime.join(","))
                     context.succeed(
-                        generateResponse( 
-                            {},
-                            buildSpeechResponse("Next Train to " + station + " is in " + trainTime.join(" and ") + " minutes", true)
+                        generateResponse(
+                            "Next Train to " + station + " is in " + trainTime.join(" and ") + " minutes",
+                            true, {}
                         )
                     )
             }
@@ -57,25 +33,52 @@ exports.handler = (event, context, callback) => {
         default:
             context.fail("Invalid request")
     }
-};
-
-buildSpeechResponse = (outputText, shouldEndSession) => {
-    return {
-        outputSpeech: {
-            type: "PlainText",
-            text: outputText
-        },
-        shouldEndSession: shouldEndSession
-    }
 }
 
-generateResponse = (sessionAttributes, speechResponse) => {
+function getTrainTime(date) {
+    var callHour = date.getHours()
+    var callMin = date.getMinutes()
+    
+    var schedule = getWeekdaySchedules()
+    var trainTime = []
+    for (var i = 0; trainTime.length < 2 && i < schedule.length; i++) {
+        var value = schedule[i]
+        var hour = parseInt(value.split(":")[0])
+        var min = parseInt(value.split(":")[1])
+        if (callHour <= hour) {
+            if (callHour < hour || callMin <= min) {
+                var diff = min - callMin
+                diff = diff < 0? diff + 60: diff
+                console.log("Next train in " + value)
+                trainTime.push(diff)
+            }
+        }
+    }
+    return trainTime
+}
+
+function getDate(event) {
+    var clientDate = new Date(event.request.timestamp)
+    var offset = -4.0
+    var utc = clientDate.getTime() + (clientDate.getTimezoneOffset() * 60000)
+    var date = new Date(utc + (3600000 * offset))
+    console.log("Proessing for date: " + date)
+    return date
+}
+
+generateResponse = (outputText, shouldEndSession, sessionAttributes) => {
     return {
         version: "1.0",
         sessionAttributes: sessionAttributes,
-        response: speechResponse
+        response: {
+            outputSpeech: {
+                type: "PlainText",
+                text: outputText
+            },
+            shouldEndSession: shouldEndSession
+        }
     }
-};
+}
 
 function getWeekdaySchedules() {
     return [
