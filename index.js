@@ -1,93 +1,96 @@
-exports.handler = (event, context, callback) => {
+exports.handler = handler;
+exports.processTime = processTime;
+
+function handler (event, context, callback)  {
     if (event.session.new) {
-        console.log("New Session")
+        console.log("New Session");
     }
 
     switch(event.request.type) {
         case "LaunchRequest": 
-            console.log("Launch requested")
+            console.log("Launch requested");
             context.succeed (
                 generateResponse(
                     "Which PATH station do you want to go to?", true, {}
                 )
-            )
+            );
             break;
         case "IntentRequest": 
             switch(event.request.intent.name) {
                 case "PathTrain": 
-                    var fromStation = "Newport"
-                    var toStation = event.request.intent.slots.station.value
-                    var date = getDate(event)
-                    var schedule = getSchedule(fromStation, toStation)
-                    var idx = getIndex(fromStation, toStation)
-                    var trainTime = getTrainTime(date, schedule, idx)
-                    console.log("Next train to " + toStation + " is in " + trainTime.join(","))
+                    var fromStation = "Newport";
+                    var toStation = event.request.intent.slots.station.value;
+                    var date = getDate(event);
+                    var schedule = getSchedule(fromStation, toStation);
+                    var idx = getIndex(fromStation, toStation);
+                    var trainTime = getTrainTime(date, schedule, idx);
+                    console.log("Next train to " + toStation + " is in " + trainTime.join(","));
                     
                     context.succeed(
                         generateResponse(
                             "Next Train to " + toStation + " is in " + trainTime.join(" and ") + " minutes",
                             true, {}
                         )
-                    )
+                    );
             }
             break;
         case "SessionEndedRequest": 
-            console.log("Session end requested")
+            console.log("Session end requested");
             break;
         default:
-            context.fail("Invalid request")
+            context.fail("Invalid request");
     }
 }
 
 function getSchedule(fromStation, toStation) {
-    return eastBoundHobokenToWTC()
+    return eastBoundHobokenToWTC();
 }
 
 function getIndex(fromStation, toStation) {
-    return 1
+    return 1;
 }
 
 function getTrainTime(date, schedule, idx) {
-    var callHour = date.getHours()
-    var callMin = date.getMinutes()
-    var trainTime = []
+    var callHour = date.getHours();
+    var callMin = date.getMinutes();
+    var trainTime = [];
     
     for (var i = 0; trainTime.length < 2 && i < schedule.length; i++) {
-        var value = processTime(schedule[i][idx])
-        var hour = value[0]
-        var min = value[1]
+        var value = processTime(schedule[i][idx]);
+        var hour = value[0];
+        var min = value[1];
         if (callHour <= hour) {
             if (callHour < hour || callMin <= min) {
-                var diff = min - callMin
-                diff = diff < 0? diff + 60: diff
-                console.log("Next train in " + value)
-                trainTime.push(diff)
+                var diff = min - callMin;
+                diff = diff < 0? diff + 60: diff;
+                console.log("Next train in " + value);
+                trainTime.push(diff);
             }
         }
     }
-    return trainTime
+    return trainTime;
 }
 
 function processTime(time) {
-    var isPm = time.indexOf("PM")
-    time = time.replace("AM", "")
-    time = time.replace("PM", "")
-    var hour = parseInt(time.split(":")[0])
-    var min = parseInt(time.split(":")[1])
-    hour = isPm? hour + 12: hour
-    return [hour, min]
+    var isPm = time.indexOf("PM");
+    time = time.replace("AM", "");
+    time = time.replace("PM", "");
+    var hour = parseInt(time.split(":")[0]);
+    var min = parseInt(time.split(":")[1]);
+    hour = isPm? hour + 12: hour;
+    return [hour, min];
 }
 
 function getDate(event) {
-    var clientDate = new Date(event.request.timestamp)
-    var offset = -4.0
-    var utc = clientDate.getTime() + (clientDate.getTimezoneOffset() * 60000)
-    var date = new Date(utc + (3600000 * offset))
-    console.log("Proessing for date: " + date)
-    return date
+    var clientDate = new Date(event.request.timestamp);
+    var offset = -4.0;
+    var utc = clientDate.getTime() + (clientDate.getTimezoneOffset() * 60000);
+    var date = new Date(utc + (3600000 * offset));
+    console.log("Proessing for date: " + date);
+    return date;
 }
 
-generateResponse = (outputText, shouldEndSession, sessionAttributes) => {
+function generateResponse(outputText, shouldEndSession, sessionAttributes) {
     return {
         version: "1.0",
         sessionAttributes: sessionAttributes,
@@ -98,7 +101,7 @@ generateResponse = (outputText, shouldEndSession, sessionAttributes) => {
             },
             shouldEndSession: shouldEndSession
         }
-    }
+    };
 }
 
 function eastBoundHobokenToWTC() {
@@ -210,5 +213,5 @@ function eastBoundHobokenToWTC() {
         ["10:41PM", "10:44PM",  "10:47PM",  "10:51PM"],
         ["10:56PM", "10:59PM",  "11:02PM",  "11:06PM"],
         ["11:11PM", "11:14PM",  "11:17PM",  "11:21PM"],
-    ]
+    ];
 }
