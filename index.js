@@ -1,5 +1,4 @@
 exports.handler = handler;
-exports.processTime = processTime;
 
 function handler (event, context, callback)  {
     if (event.session.new) {
@@ -17,9 +16,9 @@ function handler (event, context, callback)  {
             break;
         case "IntentRequest": 
             switch(event.request.intent.name) {
-                case "PathTrain": 
+                case "PathTrainTo": 
                     var fromStation = "Newport";
-                    var toStation = event.request.intent.slots.station.value;
+                    var toStation = event.request.intent.slots.toStation.value;
                     var date = getDate(event);
                     var schedule = getSchedule(fromStation, toStation);
                     var idx = getIndex(fromStation, toStation);
