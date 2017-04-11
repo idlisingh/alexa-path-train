@@ -53,7 +53,7 @@ function getTrainTime(date, schedule, idx) {
     var callHour = date.getHours();
     var callMin = date.getMinutes();
     var trainTime = [];
-    
+    console.log("Processing for Date: " + date + " Hour: " + callHour + " Minute: " + callMin)
     for (var i = 0; trainTime.length < 2 && i < schedule.length; i++) {
         var value = processTime(schedule[i][idx]);
         var hour = value[0];
@@ -62,7 +62,7 @@ function getTrainTime(date, schedule, idx) {
             if (callHour < hour || callMin <= min) {
                 var diff = min - callMin;
                 diff = diff < 0? diff + 60: diff;
-                console.log("Next train in " + value);
+                console.log("Next train in " + schedule[i][idx] + " Hour: " + hour + " Min: " + min);
                 trainTime.push(diff);
             }
         }
@@ -71,12 +71,12 @@ function getTrainTime(date, schedule, idx) {
 }
 
 function processTime(time) {
-    var isPm = time.indexOf("PM");
+    var isPm = time.indexOf("PM") >= 0;
     time = time.replace("AM", "");
     time = time.replace("PM", "");
     var hour = parseInt(time.split(":")[0]);
     var min = parseInt(time.split(":")[1]);
-    hour = isPm? hour + 12: hour;
+    hour = isPm && hour < 12 ? hour + 12: hour;
     return [hour, min];
 }
 
@@ -85,7 +85,6 @@ function getDate(event) {
     var offset = -4.0;
     var utc = clientDate.getTime() + (clientDate.getTimezoneOffset() * 60000);
     var date = new Date(utc + (3600000 * offset));
-    console.log("Proessing for date: " + date);
     return date;
 }
 
